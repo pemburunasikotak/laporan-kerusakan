@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Building, Home, Layers, Plus, Edit, Trash2, Box, X, Tag } from 'lucide-react';
 import { TableSkeleton } from '../components/SkeletonLoader';
+import { masterDataService } from '../services/masterDataService';
+import { formatEpochTime } from '../utils/timeUtils';
 
 const MasterDataPage = () => {
   const [activeTab, setActiveTab] = useState('buildings');
@@ -9,127 +11,55 @@ const MasterDataPage = () => {
   const [modalData, setModalData] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  
+  // Data State
+  const [buildings, setBuildings] = useState([]);
+  const [floors, setFloors] = useState([]);
+  const [rooms, setRooms] = useState([]);
+  const [equipmentTypes, setEquipmentTypes] = useState([]);
+  const [categories, setCategories] = useState([]);
+
   const itemsPerPage = 10;
 
-  // Simulate loading on initial load and tab change
-  useEffect(() => {
+  const fetchData = async () => {
     setLoading(true);
-    const timer = setTimeout(() => {
+    try {
+      switch (activeTab) {
+        case 'buildings':
+          const buildingsData = await masterDataService.getBuildings();
+          setBuildings(buildingsData?.data?.data || []);
+          break;
+        case 'floors':
+          const floorsData = await masterDataService.getFloors();
+          setFloors(floorsData?.data?.data || []);
+          break;
+        case 'rooms':
+          const roomsData = await masterDataService.getRooms();
+          setRooms(roomsData?.data?.data || []);
+          break;
+        case 'categories':
+          const categoriesData = await masterDataService.getCategories();
+          setCategories(categoriesData?.data?.data || []);
+          break;
+        case 'equipment':
+          const equipmentData = await masterDataService.getEquipment();
+          setEquipmentTypes(equipmentData?.data?.data || []);
+          break;
+        default:
+          break;
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      // Optional: Add error handling UI or toast
+    } finally {
       setLoading(false);
-    }, 800);
-    return () => clearTimeout(timer);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
   }, [activeTab]);
-
-  // Generate 21 dummy buildings
-  const generateBuildings = () => {
-    const buildings = [];
-    const letters = 'ABCDEFGHIJKLMNOPQRSTU';
-    for (let i = 0; i < 21; i++) {
-      buildings.push({
-        id: i + 1,
-        code: `GD${letters[i]}`,
-        name: `Gedung ${letters[i]}`,
-        floors: Math.floor(Math.random() * 5) + 2,
-        description: `Gedung untuk ${['Fakultas Teknik', 'Fakultas Ekonomi', 'Fakultas MIPA', 'Administrasi', 'Lab & Penelitian'][i % 5]}`
-      });
-    }
-    return buildings;
-  };
-
-  // Generate 21 dummy floors
-  const generateFloors = () => {
-    const floors = [];
-    const gedungs = ['Gedung A', 'Gedung B', 'Gedung C', 'Gedung D', 'Gedung E'];
-    for (let i = 0; i < 21; i++) {
-      floors.push({
-        id: i + 1,
-        building: gedungs[i % gedungs.length],
-        floor: (i % 5) + 1,
-        rooms: Math.floor(Math.random() * 15) + 8
-      });
-    }
-    return floors;
-  };
-
-  // Generate 21 dummy rooms
-  const generateRooms = () => {
-    const rooms = [];
-    const gedungs = ['Gedung A', 'Gedung B', 'Gedung C', 'Gedung D', 'Gedung E'];
-    const types = ['Kelas', 'Lab', 'Kantor', 'Rapat', 'Aula'];
-    for (let i = 0; i < 21; i++) {
-      const floor = (i % 5) + 1;
-      const roomNum = String(floor) + String(i % 10).padStart(2, '0');
-      rooms.push({
-        id: i + 1,
-        building: gedungs[i % gedungs.length],
-        floor: floor,
-        room_number: roomNum,
-        name: `Ruang ${types[i % types.length]} ${i + 1}`,
-        capacity: [20, 30, 40, 50, 60][i % 5],
-        type: types[i % types.length]
-      });
-    }
-    return rooms;
-  };
-
-  // Generate 21 dummy equipment types
-  const generateEquipment = () => {
-    const equipment = [];
-    const categories = ['Elektronik', 'IT', 'Furniture', 'Pendidikan'];
-    const names = ['AC', 'Proyektor', 'Komputer', 'Kursi', 'Meja', 'Papan Tulis', 'Printer', 'Scanner', 'CCTV', 'Speaker', 'Microphone', 'Whiteboard', 'Lemari', 'Kipas Angin', 'Lampu', 'Stop Kontak', 'Kabel', 'Switch', 'Router', 'UPS', 'Stabilizer'];
-    for (let i = 0; i < 21; i++) {
-      const total = Math.floor(Math.random() * 100) + 20;
-      const broken = Math.floor(Math.random() * 15);
-      equipment.push({
-        id: i + 1,
-        name: names[i],
-        category: categories[i % categories.length],
-        total: total,
-        broken: broken
-      });
-    }
-    return equipment;
-  };
-
-// Generate 21 dummy categories
-const generateCategories = () => {
-  const categoriesData = [
-    { name: 'Elektronik', description: 'Peralatan elektronik seperti AC, kipas angin, dll' },
-    { name: 'IT', description: 'Peralatan teknologi informasi dan komputer' },
-    { name: 'Furniture', description: 'Perabotan dan furnitur kantor' },
-    { name: 'Pendidikan', description: 'Peralatan pendukung kegiatan belajar mengajar' },
-    { name: 'Keamanan', description: 'Peralatan keamanan gedung' },
-    { name: 'Kebersihan', description: 'Peralatan kebersihan dan sanitasi' },
-    { name: 'Laboratorium', description: 'Peralatan laboratorium dan penelitian' },
-    { name: 'Audio Visual', description: 'Peralatan audio visual dan multimedia' },
-    { name: 'Jaringan', description: 'Peralatan jaringan dan telekomunikasi' },
-    { name: 'Listrik', description: 'Peralatan instalasi listrik' },
-    { name: 'Pendingin', description: 'Sistem pendingin dan HVAC' },
-    { name: 'Pencahayaan', description: 'Sistem dan peralatan pencahayaan' },
-    { name: 'Transportasi', description: 'Peralatan transportasi internal' },
-    { name: 'Medis', description: 'Peralatan kesehatan dan medis' },
-    { name: 'Olahraga', description: 'Peralatan olahraga dan kebugaran' },
-    { name: 'Dapur', description: 'Peralatan dapur dan kantin' },
-    { name: 'Cetak', description: 'Mesin cetak dan fotokopi' },
-    { name: 'Arsip', description: 'Peralatan penyimpanan dan arsip' },
-    { name: 'Presentasi', description: 'Peralatan presentasi dan meeting' },
-    { name: 'Taman', description: 'Peralatan pertamanan dan landscape' },
-    { name: 'Parkir', description: 'Sistem dan peralatan parkir' },
-  ];
-  
-  return categoriesData.map((cat, i) => ({
-    id: i + 1,
-    name: cat.name,
-    description: cat.description,
-    totalEquipment: Math.floor(Math.random() * 50) + 5
-  }));
-};
-
-  const buildings = generateBuildings();
-  const floors = generateFloors();
-  const rooms = generateRooms();
-  const equipmentTypes = generateEquipment();
-  const categories = generateCategories();
 
   const tabs = [
     { id: 'buildings', name: 'Gedung', icon: Building },
@@ -154,10 +84,10 @@ const generateCategories = () => {
   };
 
   const currentData = getCurrentData();
-  const totalPages = Math.ceil(currentData.length / itemsPerPage);
+  // const totalPages = Math.ceil(currentData.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const paginatedData = currentData.slice(startIndex, endIndex);
+  const paginatedData = currentData?.slice(startIndex, endIndex);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -176,10 +106,68 @@ const generateCategories = () => {
     setShowModal(true);
   };
 
-  const handleSubmit = (e) => {
+  const handleDelete = async (id) => {
+    if (!window.confirm('Apakah Anda yakin ingin menghapus data ini?')) return;
+
+    setLoading(true);
+    try {
+      switch (activeTab) {
+        case 'buildings': await masterDataService.deleteBuilding(id); break;
+        case 'floors': await masterDataService.deleteFloor(id); break;
+        case 'rooms': await masterDataService.deleteRoom(id); break;
+        case 'equipment': await masterDataService.deleteEquipment(id); break;
+        case 'categories': await masterDataService.deleteCategory(id); break;
+      }
+      await fetchData();
+    } catch (error) {
+      console.error('Error deleting data:', error);
+      alert('Gagal menghapus data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert(`Data berhasil ${modalType === 'add' ? 'ditambahkan' : 'diupdate'}!`);
-    setShowModal(false);
+    setSubmitting(true);
+    
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData.entries());
+    
+    // Convert numeric strings to numbers
+    const numericFields = ['building_id', 'floor_number', 'floors', 'floor', 'rooms', 'capacity', 'total', 'broken'];
+    numericFields.forEach(field => {
+      if (data[field]) data[field] = Number(data[field]);
+    });
+
+    try {
+      if (modalType === 'add') {
+        switch (activeTab) {
+          case 'buildings': await masterDataService.createBuilding(data); break;
+          case 'floors': await masterDataService.createFloor(data); break;
+          case 'rooms': await masterDataService.createRoom(data); break;
+          case 'equipment': await masterDataService.createEquipment(data); break;
+          case 'categories': await masterDataService.createCategory(data); break;
+        }
+      } else {
+        const id = modalData.id;
+        switch (activeTab) {
+          case 'buildings': await masterDataService.updateBuilding(id, data); break;
+          case 'floors': await masterDataService.updateFloor(id, data); break;
+          case 'rooms': await masterDataService.updateRoom(id, data); break;
+          case 'equipment': await masterDataService.updateEquipment(id, data); break;
+          case 'categories': await masterDataService.updateCategory(id, data); break;
+        }
+      }
+      await fetchData();
+      setShowModal(false);
+      alert(`Data berhasil ${modalType === 'add' ? 'ditambahkan' : 'diupdate'}!`);
+    } catch (error) {
+      console.error('Error saving data:', error);
+      alert('Gagal menyimpan data');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleTabChange = (tabId) => {
@@ -190,7 +178,7 @@ const generateCategories = () => {
   const renderPagination = () => (
     <div className="mt-4 px-4 py-3 bg-gray-50 border-t flex flex-col sm:flex-row justify-between items-center gap-4">
       <p className="text-sm text-gray-600">
-        Menampilkan {startIndex + 1}-{Math.min(endIndex, currentData.length)} dari {currentData.length} data
+        {/* Menampilkan {startIndex + 1}-{Math.min(endIndex, currentData.length)} dari {currentData.length} data */}
       </p>
       <div className="flex gap-2">
         <button
@@ -205,7 +193,7 @@ const generateCategories = () => {
           Previous
         </button>
 
-        {[...Array(totalPages)].map((_, index) => {
+        {/* {[...Array(totalPages)].map((_, index) => {
           const page = index + 1;
           if (
             page === 1 ||
@@ -229,9 +217,9 @@ const generateCategories = () => {
             return <span key={page} className="px-2 py-2">...</span>;
           }
           return null;
-        })}
+        })} */}
 
-        <button
+        {/* <button
           onClick={() => handlePageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
           className={`px-4 py-2 border rounded transition ${
@@ -241,7 +229,7 @@ const generateCategories = () => {
           }`}
         >
           Next
-        </button>
+        </button> */}
       </div>
     </div>
   );
@@ -259,20 +247,20 @@ const generateCategories = () => {
           <>
             <div>
               <label className="block text-sm font-semibold mb-2">Kode Gedung</label>
-              <input type="text" className="w-full border rounded px-3 py-2" placeholder="Contoh: GDA" defaultValue={modalData.code} required />
+              <input name="code" type="text" className="w-full border rounded px-3 py-2" placeholder="Contoh: GDA" defaultValue={modalData.code} required />
             </div>
             <div>
               <label className="block text-sm font-semibold mb-2">Nama Gedung</label>
-              <input type="text" className="w-full border rounded px-3 py-2" placeholder="Contoh: Gedung A" defaultValue={modalData.name} required />
+              <input name="name" type="text" className="w-full border rounded px-3 py-2" placeholder="Contoh: Gedung A" defaultValue={modalData.name} required />
             </div>
             <div>
-              <label className="block text-sm font-semibold mb-2">Jumlah Lantai</label>
-              <input type="number" className="w-full border rounded px-3 py-2" placeholder="Contoh: 4" defaultValue={modalData.floors} required />
+              <label className="block text-sm font-semibold mb-2">Lokasi</label>
+              <input name="location" type="text" className="w-full border rounded px-3 py-2" placeholder="Contoh: 4" defaultValue={modalData.location} required />
             </div>
-            <div>
+            {/* <div>
               <label className="block text-sm font-semibold mb-2">Deskripsi</label>
-              <textarea className="w-full border rounded px-3 py-2" rows="3" placeholder="Deskripsi gedung..." defaultValue={modalData.description}></textarea>
-            </div>
+              <textarea name="description" className="w-full border rounded px-3 py-2" rows="3" placeholder="Deskripsi gedung..." defaultValue={modalData.description}></textarea>
+            </div> */}
           </>
         );
         break;
@@ -283,18 +271,18 @@ const generateCategories = () => {
           <>
             <div>
               <label className="block text-sm font-semibold mb-2">Gedung</label>
-              <select className="w-full border rounded px-3 py-2" defaultValue={modalData.building} required>
+              <select name="building_id" className="w-full border rounded px-3 py-2" defaultValue={modalData.building_id} required>
                 <option value="">Pilih Gedung</option>
-                {buildings.slice(0, 5).map(b => <option key={b.id} value={b.name}>{b.name}</option>)}
+                {buildings.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-semibold mb-2">Lantai</label>
-              <input type="number" className="w-full border rounded px-3 py-2" placeholder="Contoh: 1" defaultValue={modalData.floor} required />
+              <label className="block text-sm font-semibold mb-2">Nomor Lantai</label>
+              <input name="floor_number" type="number" className="w-full border rounded px-3 py-2" placeholder="Contoh: 1" defaultValue={modalData.floor_number} required />
             </div>
             <div>
-              <label className="block text-sm font-semibold mb-2">Jumlah Ruangan</label>
-              <input type="number" className="w-full border rounded px-3 py-2" placeholder="Contoh: 12" defaultValue={modalData.rooms} required />
+              <label className="block text-sm font-semibold mb-2">Nama Lantai</label>
+              <input name="name" type="text" className="w-full border rounded px-3 py-2" placeholder="Contoh: Lantai 1" defaultValue={modalData.name} />
             </div>
           </>
         );
@@ -306,30 +294,30 @@ const generateCategories = () => {
           <>
             <div>
               <label className="block text-sm font-semibold mb-2">Gedung</label>
-              <select className="w-full border rounded px-3 py-2" defaultValue={modalData.building} required>
+              <select name="building" className="w-full border rounded px-3 py-2" defaultValue={modalData.building} required>
                 <option value="">Pilih Gedung</option>
                 {buildings.slice(0, 5).map(b => <option key={b.id} value={b.name}>{b.name}</option>)}
               </select>
             </div>
             <div>
               <label className="block text-sm font-semibold mb-2">Lantai</label>
-              <input type="number" className="w-full border rounded px-3 py-2" placeholder="Contoh: 1" defaultValue={modalData.floor} required />
+              <input name="floor" type="number" className="w-full border rounded px-3 py-2" placeholder="Contoh: 1" defaultValue={modalData.floor} required />
             </div>
             <div>
               <label className="block text-sm font-semibold mb-2">Nomor Ruangan</label>
-              <input type="text" className="w-full border rounded px-3 py-2" placeholder="Contoh: 101" defaultValue={modalData.room_number} required />
+              <input name="room_number" type="text" className="w-full border rounded px-3 py-2" placeholder="Contoh: 101" defaultValue={modalData.room_number} required />
             </div>
             <div>
               <label className="block text-sm font-semibold mb-2">Nama Ruangan</label>
-              <input type="text" className="w-full border rounded px-3 py-2" placeholder="Contoh: Ruang Kelas 1A" defaultValue={modalData.name} required />
+              <input name="name" type="text" className="w-full border rounded px-3 py-2" placeholder="Contoh: Ruang Kelas 1A" defaultValue={modalData.name} required />
             </div>
-            <div>
+            {/* <div>
               <label className="block text-sm font-semibold mb-2">Kapasitas</label>
-              <input type="number" className="w-full border rounded px-3 py-2" placeholder="Contoh: 40" defaultValue={modalData.capacity} required />
-            </div>
-            <div>
+              <input name="capacity" type="number" className="w-full border rounded px-3 py-2" placeholder="Contoh: 40" defaultValue={modalData.capacity} required />
+            </div> */}
+            {/* <div>
               <label className="block text-sm font-semibold mb-2">Tipe Ruangan</label>
-              <select className="w-full border rounded px-3 py-2" defaultValue={modalData.type} required>
+              <select name="type" className="w-full border rounded px-3 py-2" defaultValue={modalData.type} required>
                 <option value="">Pilih Tipe</option>
                 <option value="Kelas">Kelas</option>
                 <option value="Lab">Lab</option>
@@ -337,7 +325,7 @@ const generateCategories = () => {
                 <option value="Rapat">Rapat</option>
                 <option value="Aula">Aula</option>
               </select>
-            </div>
+            </div> */}
           </>
         );
         break;
@@ -348,11 +336,11 @@ const generateCategories = () => {
           <>
             <div>
               <label className="block text-sm font-semibold mb-2">Nama Peralatan</label>
-              <input type="text" className="w-full border rounded px-3 py-2" placeholder="Contoh: AC" defaultValue={modalData.name} required />
+              <input name="name" type="text" className="w-full border rounded px-3 py-2" placeholder="Contoh: AC" defaultValue={modalData.name} required />
             </div>
             <div>
               <label className="block text-sm font-semibold mb-2">Kategori</label>
-              <select className="w-full border rounded px-3 py-2" defaultValue={modalData.category} required>
+              <select name="category" className="w-full border rounded px-3 py-2" defaultValue={modalData.category} required>
                 <option value="">Pilih Kategori</option>
                 <option value="Elektronik">Elektronik</option>
                 <option value="IT">IT</option>
@@ -362,11 +350,11 @@ const generateCategories = () => {
             </div>
             <div>
               <label className="block text-sm font-semibold mb-2">Total Unit</label>
-              <input type="number" className="w-full border rounded px-3 py-2" placeholder="Contoh: 85" defaultValue={modalData.total} required />
+              <input name="total" type="number" className="w-full border rounded px-3 py-2" placeholder="Contoh: 85" defaultValue={modalData.total} required />
             </div>
             <div>
               <label className="block text-sm font-semibold mb-2">Unit Rusak</label>
-              <input type="number" className="w-full border rounded px-3 py-2" placeholder="Contoh: 5" defaultValue={modalData.broken} required />
+              <input name="broken" type="number" className="w-full border rounded px-3 py-2" placeholder="Contoh: 5" defaultValue={modalData.broken} required />
             </div>
           </>
         );
@@ -378,11 +366,11 @@ const generateCategories = () => {
           <>
             <div>
               <label className="block text-sm font-semibold mb-2">Nama Kategori</label>
-              <input type="text" className="w-full border rounded px-3 py-2" placeholder="Contoh: Elektronik" defaultValue={modalData.name} required />
+              <input name="name" type="text" className="w-full border rounded px-3 py-2" placeholder="Contoh: Elektronik" defaultValue={modalData.name} required />
             </div>
             <div>
               <label className="block text-sm font-semibold mb-2">Deskripsi</label>
-              <textarea className="w-full border rounded px-3 py-2" rows="3" placeholder="Deskripsi kategori..." defaultValue={modalData.description}></textarea>
+              <textarea name="description" className="w-full border rounded px-3 py-2" rows="3" placeholder="Deskripsi kategori..." defaultValue={modalData.description}></textarea>
             </div>
           </>
         );
@@ -458,18 +446,18 @@ const generateCategories = () => {
                 <tr>
                   <th className="px-4 py-3 text-left text-sm font-semibold">Kode</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold">Nama Gedung</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Jumlah Lantai</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Deskripsi</th>
+                  {/* <th className="px-4 py-3 text-left text-sm font-semibold">Jumlah Lantai</th> */}
+                  <th className="px-4 py-3 text-left text-sm font-semibold">Lokasi</th>
                   <th className="px-4 py-3 text-center text-sm font-semibold">Aksi</th>
                 </tr>
               </thead>
               <tbody>
-                {paginatedData.map(building => (
+                {paginatedData?.map(building => (
                   <tr key={building.id} className="border-b hover:bg-gray-50">
                     <td className="px-4 py-3 font-mono font-bold text-blue-600">{building.code}</td>
                     <td className="px-4 py-3 font-semibold">{building.name}</td>
-                    <td className="px-4 py-3">{building.floors} Lantai</td>
-                    <td className="px-4 py-3 text-gray-600">{building.description}</td>
+                    {/* <td className="px-4 py-3">{building.floors} Lantai</td> */}
+                    <td className="px-4 py-3 text-gray-600">{building.location}</td>
                     <td className="px-4 py-3">
                       <div className="flex justify-center gap-2">
                         <button 
@@ -478,7 +466,12 @@ const generateCategories = () => {
                         >
                           <Edit size={16} />
                         </button>
-                        <button className="p-1 text-red-600 hover:bg-red-100 rounded"><Trash2 size={16} /></button>
+                        <button 
+                          onClick={() => handleDelete(building.id)}
+                          className="p-1 text-red-600 hover:bg-red-100 rounded"
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -505,17 +498,17 @@ const generateCategories = () => {
               <thead className="bg-gray-100 border-b">
                 <tr>
                   <th className="px-4 py-3 text-left text-sm font-semibold">Gedung</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Lantai</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Jumlah Ruangan</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold">Nomor Lantai</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold">Nama Lantai</th>
                   <th className="px-4 py-3 text-center text-sm font-semibold">Aksi</th>
                 </tr>
               </thead>
               <tbody>
                 {paginatedData.map(floor => (
                   <tr key={floor.id} className="border-b hover:bg-gray-50">
-                    <td className="px-4 py-3 font-semibold">{floor.building}</td>
-                    <td className="px-4 py-3">Lantai {floor.floor}</td>
-                    <td className="px-4 py-3">{floor.rooms} Ruangan</td>
+                    <td className="px-4 py-3 font-semibold">{floor.building?.name || floor.building_id}</td>
+                    <td className="px-4 py-3">Lantai {floor.floor_number}</td>
+                    <td className="px-4 py-3">{floor.name || '-'}</td>
                     <td className="px-4 py-3">
                       <div className="flex justify-center gap-2">
                         <button 
@@ -524,7 +517,12 @@ const generateCategories = () => {
                         >
                           <Edit size={16} />
                         </button>
-                        <button className="p-1 text-red-600 hover:bg-red-100 rounded"><Trash2 size={16} /></button>
+                        <button 
+                          onClick={() => handleDelete(floor.id)}
+                          className="p-1 text-red-600 hover:bg-red-100 rounded"
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -552,30 +550,31 @@ const generateCategories = () => {
                 <tr>
                   <th className="px-4 py-3 text-left text-sm font-semibold">Lokasi</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold">No. Ruang</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Nama</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Kapasitas</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Tipe</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold">Nama Ruangan</th>
+                  {/* <th className="px-4 py-3 text-left text-sm font-semibold">Gedung</th> */}
+                  {/* <th className="px-4 py-3 text-left text-sm font-semibold">Tipe</th> */}
                   <th className="px-4 py-3 text-center text-sm font-semibold">Aksi</th>
                 </tr>
               </thead>
               <tbody>
-                {paginatedData.map(room => (
+                {console.log('paginatedData',paginatedData)}
+                {paginatedData?.map(room => (
                   <tr key={room.id} className="border-b hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm text-gray-600">{room.building} - Lt {room.floor}</td>
-                    <td className="px-4 py-3 font-mono font-bold text-blue-600">{room.room_number}</td>
-                    <td className="px-4 py-3 font-semibold">{room.name}</td>
-                    <td className="px-4 py-3">{room.capacity} orang</td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 text-sm text-gray-600">{room?.floor?.building?.name || "-"} - Lt {room?.floor?.building?.location || "-"}</td>
+                    <td className="px-4 py-3 font-mono font-bold text-blue-600">{room?.code || "-"}</td>
+                    <td className="px-4 py-3 font-semibold">{room?.name || "-"}</td>
+                    {/* <td className="px-4 py-3">{room?.floor?.building?.name || "-"}</td> */}
+                    {/* <td className="px-4 py-3">
                       <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                        room.type === 'Lab' ? 'bg-purple-100 text-purple-600' :
-                        room.type === 'Kelas' ? 'bg-blue-100 text-blue-600' :
-                        room.type === 'Kantor' ? 'bg-gray-100 text-gray-600' :
-                        room.type === 'Rapat' ? 'bg-yellow-100 text-yellow-600' :
+                        room?.type === 'Lab' ? 'bg-purple-100 text-purple-600' :
+                        room?.type === 'Kelas' ? 'bg-blue-100 text-blue-600' :
+                        room?.type === 'Kantor' ? 'bg-gray-100 text-gray-600' :
+                        room?.type === 'Rapat' ? 'bg-yellow-100 text-yellow-600' :
                         'bg-green-100 text-green-600'
                       }`}>
-                        {room.type}
+                        {room?.type}
                       </span>
-                    </td>
+                    </td> */}
                     <td className="px-4 py-3">
                       <div className="flex justify-center gap-2">
                         <button 
@@ -584,7 +583,12 @@ const generateCategories = () => {
                         >
                           <Edit size={16} />
                         </button>
-                        <button className="p-1 text-red-600 hover:bg-red-100 rounded"><Trash2 size={16} /></button>
+                        <button 
+                          onClick={() => handleDelete(room?.id)}
+                          className="p-1 text-red-600 hover:bg-red-100 rounded"
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -649,7 +653,12 @@ const generateCategories = () => {
                           >
                             <Edit size={16} />
                           </button>
-                          <button className="p-1 text-red-600 hover:bg-red-100 rounded"><Trash2 size={16} /></button>
+                          <button 
+                          onClick={() => handleDelete(equipment.id)}
+                          className="p-1 text-red-600 hover:bg-red-100 rounded"
+                        >
+                          <Trash2 size={16} />
+                        </button>
                         </div>
                       </td>
                     </tr>
@@ -676,15 +685,21 @@ const generateCategories = () => {
             <table className="w-full">
               <thead className="bg-gray-100 border-b">
                 <tr>
+                  <th className="px-4 py-3 text-left text-sm font-semibold">ID</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold">Code</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold">Nama Kategori</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold">Deskripsi</th>
-                  <th className="px-4 py-3 text-center text-sm font-semibold">Total Peralatan</th>
+                  {/* <th className="px-4 py-3 text-center text-sm font-semibold">Total Peralatan</th> */}
+                  <th className="px-4 py-3 text-center text-sm font-semibold">Created At</th>
+                  <th className="px-4 py-3 text-center text-sm font-semibold">Updated At</th>
                   <th className="px-4 py-3 text-center text-sm font-semibold">Aksi</th>
                 </tr>
               </thead>
               <tbody>
                 {paginatedData.map(category => (
                   <tr key={category.id} className="border-b hover:bg-gray-50">
+                    <td className="px-4 py-3">{category.id}</td>
+                    <td className="px-4 py-3">{category.code}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <span className="w-3 h-3 rounded-full bg-blue-500"></span>
@@ -692,11 +707,8 @@ const generateCategories = () => {
                       </div>
                     </td>
                     <td className="px-4 py-3 text-gray-600">{category.description}</td>
-                    <td className="px-4 py-3 text-center">
-                      <span className="px-2 py-1 bg-blue-100 text-blue-600 rounded text-sm font-semibold">
-                        {category.totalEquipment} item
-                      </span>
-                    </td>
+                    <td className="px-4 py-3 text-gray-600 text-sm">{formatEpochTime(category.created_at)}</td>
+                    <td className="px-4 py-3 text-gray-600 text-sm">{formatEpochTime(category.updated_at)}</td>
                     <td className="px-4 py-3">
                       <div className="flex justify-center gap-2">
                         <button 
@@ -705,7 +717,12 @@ const generateCategories = () => {
                         >
                           <Edit size={16} />
                         </button>
-                        <button className="p-1 text-red-600 hover:bg-red-100 rounded"><Trash2 size={16} /></button>
+                        <button 
+                          onClick={() => handleDelete(category.id)}
+                          className="p-1 text-red-600 hover:bg-red-100 rounded"
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       </div>
                     </td>
                   </tr>

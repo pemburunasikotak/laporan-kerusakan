@@ -1,7 +1,11 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:3000/api', // Hardcoded for now, should be env
+  // Using relative path to go through Vite proxy (avoids CORS)
+  baseURL: '/api/v1',
+  headers: {
+    "ngrok-skip-browser-warning": "true"
+  }
 });
 
 api.interceptors.request.use((config) => {
