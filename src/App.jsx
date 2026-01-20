@@ -6,7 +6,7 @@ import useAuthStore from './store/authStore';
 import DashboardOverview from './pages/DashboardOverview';
 import ReportsList from './pages/ReportsList';
 import TechniciansPage from './pages/TechniciansPage';
-import MasterDataPage from './pages/MasterDataPage';
+import MasterDataPage from './features/master-data/MasterDataPage';
 import WhatsAppManagement from './pages/WhatsAppManagement';
 import TechnicianDashboard from './pages/TechnicianDashboard';
 import PublicReportPage from './pages/PublicReportPage';
