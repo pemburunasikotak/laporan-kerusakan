@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useSnackbar } from 'notistack';
 import { Search, Filter, Eye, UserPlus, RefreshCcw, MapPin, Phone, Calendar, User, Image as ImageIcon } from 'lucide-react';
 import { SummaryCardSkeleton, TableSkeleton } from '../components/SkeletonLoader';
 import { 
@@ -250,6 +251,7 @@ const AssignTechnicianModal = ({ report, onClose, onAssign }) => {
 
 // Main Component
 const ReportsList = () => {
+  const { enqueueSnackbar } = useSnackbar();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [selectedReport, setSelectedReport] = useState(null);
@@ -299,7 +301,7 @@ const ReportsList = () => {
   };
 
   const handleAssignTechnician = (reportId, technician) => {
-    alert(`Teknisi ${technician.name} berhasil ditugaskan!`);
+    enqueueSnackbar(`Teknisi ${technician.name} berhasil ditugaskan!`, { variant: 'success' });
     setShowAssignModal(null);
   };
 

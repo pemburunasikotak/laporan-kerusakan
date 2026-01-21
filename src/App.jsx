@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { SnackbarProvider } from 'notistack';
 import Login from './pages/Login';
 import Layout from './components/Layout';
 import useAuthStore from './store/authStore';
@@ -28,7 +29,8 @@ function App() {
   const user = useAuthStore((state) => state.user) || JSON.parse(localStorage.getItem('user'));
 
   return (
-    <BrowserRouter>
+    <SnackbarProvider maxSnack={3} anchorOrigin={{ vertical: 'top', horizontal: 'right' }}>
+      <BrowserRouter>
       <Routes>
         {/* Public Routes */}
         <Route path="/lapor" element={<PublicReportPage />} />
@@ -83,7 +85,8 @@ function App() {
           } />
         </Route>
       </Routes>
-    </BrowserRouter>
+      </BrowserRouter>
+    </SnackbarProvider>
   );
 }
 

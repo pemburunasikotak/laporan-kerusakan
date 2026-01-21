@@ -14,42 +14,42 @@ const EquipmentTable = ({ data, loading, onEdit, onDelete, onAdd }) => {
       className: 'text-gray-600'
     },
     {
-      key: 'total',
-      label: 'Total Unit',
+      key: 'specification',
+      label: 'Spesifikasi',
       className: 'font-semibold',
       align: 'center'
     },
     {
-      key: 'broken',
-      label: 'Rusak',
+      key: 'procurement_year',
+      label: 'Tahun Pengadaan ',
       className: 'text-red-600 font-semibold',
       align: 'center'
     },
-    {
-      key: 'status',
-      label: 'Status',
-      align: 'center',
-      render: (row) => {
-        const percentage = ((row.broken / row.total) * 100).toFixed(1);
-        return (
-          <div className="flex items-center justify-center gap-2">
-            <div className="w-24 bg-gray-200 rounded-full h-2">
-              <div
-                className={`h-2 rounded-full ${
-                  percentage < 5
-                    ? 'bg-green-500'
-                    : percentage < 15
-                    ? 'bg-yellow-500'
-                    : 'bg-red-500'
-                }`}
-                style={{ width: `${percentage}%` }}
-              ></div>
-            </div>
-            <span className="text-xs font-semibold">{percentage}%</span>
-          </div>
-        );
-      }
-    }
+    // {
+    //   key: 'status',
+    //   label: 'Status',
+    //   align: 'center',
+    //   render: (row) => {
+    //     const percentage = ((row.broken / row.total) * 100).toFixed(1);
+    //     return (
+    //       <div className="flex items-center justify-center gap-2">
+    //         <div className="w-24 bg-gray-200 rounded-full h-2">
+    //           <div
+    //             className={`h-2 rounded-full ${
+    //               percentage < 5
+    //                 ? 'bg-green-500'
+    //                 : percentage < 15
+    //                 ? 'bg-yellow-500'
+    //                 : 'bg-red-500'
+    //             }`}
+    //             style={{ width: `${percentage}%` }}
+    //           ></div>
+    //         </div>
+    //         <span className="text-xs font-semibold">{percentage}%</span>
+    //       </div>
+    //     );
+    //   }
+    // }
   ];
 
   return (

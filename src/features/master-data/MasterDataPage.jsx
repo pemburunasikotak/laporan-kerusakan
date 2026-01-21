@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSnackbar } from 'notistack';
 import TabNavigation from './components/shared/TabNavigation';
 import FormModal from './components/shared/FormModal';
 import { useMasterData } from './hooks/useMasterData';
@@ -7,28 +8,44 @@ import { masterDataService } from '../../services/masterDataService';
 import { MASTER_DATA_TABS } from './constants/masterDataConfig';
 
 const MasterDataPage = () => {
+  const { enqueueSnackbar } = useSnackbar();
   const [activeTab, setActiveTab] = useState('buildings');
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState('add');
   const [modalData, setModalData] = useState({});
-
-  // Get current tab configuration
+  const [rooms, setRooms] = useState([]);
+  const [categories, setCategories] = useState([]);
   const currentConfig = MASTER_DATA_TABS.find((t) => t.id === activeTab);
   const { TableComponent, FormComponent } = currentConfig;
-
-  // Fetch data for active tab
   const { data, loading, refetch } = useMasterData(activeTab, masterDataService);
 
-  // CRUD operations
   const { create, update, remove, loading: submitting } = useCRUD(
     masterDataService,
     activeTab,
     () => {
       refetch();
       setShowModal(false);
-      alert(`Data berhasil ${modalType === 'add' ? 'ditambahkan' : 'diupdate'}!`);
-    }
+      enqueueSnackbar(`Data berhasil ${modalType === 'add' ? 'ditambahkan' : 'diupdate'}!`, { variant: 'success' });
+    },
+    enqueueSnackbar
   );
+  useEffect(() => {
+    const fetchDropdownData = async () => {
+      if (activeTab === 'equipment') {
+        try {
+          const [roomsData, categoriesData] = await Promise.all([
+            masterDataService.getRooms(),
+            masterDataService.getCategories()
+          ]);
+          setRooms(roomsData.data || roomsData);
+          setCategories(categoriesData.data || categoriesData);
+        } catch (error) {
+          console.error('Error fetching dropdown data:', error);
+        }
+      }
+    };
+    fetchDropdownData();
+  }, [activeTab]);
 
   // Handlers
   const handleAdd = () => {
@@ -48,25 +65,32 @@ const MasterDataPage = () => {
     refetch();
   };
 
+  const generateCode = () => {
+    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+    return code;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
-
-    // Convert numeric fields
-    const numericFields = ['building_id', 'floor_number', 'floor', 'rooms', 'capacity', 'total', 'broken'];
+    const numericFields = ['building_id', 'floor_number', 'floor', 'rooms', 'capacity', 'total', 'broken', 'room_id', 'category_id', 'procurement_year'];
     numericFields.forEach((field) => {
       if (data[field]) data[field] = Number(data[field]);
     });
 
     try {
       if (modalType === 'add') {
-        await create(data);
+        if (activeTab === 'categories') {
+          await create({...data, code: generateCode()});
+        }else {
+          await create(data);
+        }
       } else {
         await update(modalData.id, data);
       }
     } catch (error) {
-      alert('Gagal menyimpan data');
+      enqueueSnackbar(`Gagal menyimpan data ${modalType === 'add' ? 'ditambahkan' : 'diupdate'}!`, { variant: 'error' });
     }
   };
 
@@ -107,7 +131,12 @@ const MasterDataPage = () => {
         onSubmit={handleSubmit}
         submitting={submitting}
       >
-        <FormComponent defaultValues={modalData} buildings={buildings} />
+        <FormComponent 
+          defaultValues={modalData} 
+          buildings={buildings}
+          rooms={rooms}
+          categories={categories}
+        />
       </FormModal>
     </div>
   );

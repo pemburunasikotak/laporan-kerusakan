@@ -50,8 +50,7 @@ const MasterDataPage = () => {
           break;
       }
     } catch (error) {
-      console.error('Error fetching data:', error);
-      // Optional: Add error handling UI or toast
+      enqueueSnackbar('Error fetching data', { variant: 'error' });
     } finally {
       setLoading(false);
     }
@@ -192,44 +191,6 @@ const MasterDataPage = () => {
         >
           Previous
         </button>
-
-        {/* {[...Array(totalPages)].map((_, index) => {
-          const page = index + 1;
-          if (
-            page === 1 ||
-            page === totalPages ||
-            (page >= currentPage - 1 && page <= currentPage + 1)
-          ) {
-            return (
-              <button
-                key={page}
-                onClick={() => handlePageChange(page)}
-                className={`px-4 py-2 rounded transition ${
-                  currentPage === page
-                    ? 'bg-blue-600 text-white'
-                    : 'border hover:bg-gray-100'
-                }`}
-              >
-                {page}
-              </button>
-            );
-          } else if (page === currentPage - 2 || page === currentPage + 2) {
-            return <span key={page} className="px-2 py-2">...</span>;
-          }
-          return null;
-        })} */}
-
-        {/* <button
-          onClick={() => handlePageChange(currentPage + 1)}
-          disabled={currentPage === totalPages}
-          className={`px-4 py-2 border rounded transition ${
-            currentPage === totalPages
-              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-              : 'hover:bg-gray-100'
-          }`}
-        >
-          Next
-        </button> */}
       </div>
     </div>
   );
@@ -257,10 +218,6 @@ const MasterDataPage = () => {
               <label className="block text-sm font-semibold mb-2">Lokasi</label>
               <input name="location" type="text" className="w-full border rounded px-3 py-2" placeholder="Contoh: 4" defaultValue={modalData.location} required />
             </div>
-            {/* <div>
-              <label className="block text-sm font-semibold mb-2">Deskripsi</label>
-              <textarea name="description" className="w-full border rounded px-3 py-2" rows="3" placeholder="Deskripsi gedung..." defaultValue={modalData.description}></textarea>
-            </div> */}
           </>
         );
         break;
@@ -311,21 +268,6 @@ const MasterDataPage = () => {
               <label className="block text-sm font-semibold mb-2">Nama Ruangan</label>
               <input name="name" type="text" className="w-full border rounded px-3 py-2" placeholder="Contoh: Ruang Kelas 1A" defaultValue={modalData.name} required />
             </div>
-            {/* <div>
-              <label className="block text-sm font-semibold mb-2">Kapasitas</label>
-              <input name="capacity" type="number" className="w-full border rounded px-3 py-2" placeholder="Contoh: 40" defaultValue={modalData.capacity} required />
-            </div> */}
-            {/* <div>
-              <label className="block text-sm font-semibold mb-2">Tipe Ruangan</label>
-              <select name="type" className="w-full border rounded px-3 py-2" defaultValue={modalData.type} required>
-                <option value="">Pilih Tipe</option>
-                <option value="Kelas">Kelas</option>
-                <option value="Lab">Lab</option>
-                <option value="Kantor">Kantor</option>
-                <option value="Rapat">Rapat</option>
-                <option value="Aula">Aula</option>
-              </select>
-            </div> */}
           </>
         );
         break;
@@ -617,7 +559,7 @@ const MasterDataPage = () => {
                   <th className="px-4 py-3 text-left text-sm font-semibold">Nama Peralatan</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold">Kategori</th>
                   <th className="px-4 py-3 text-center text-sm font-semibold">Total Unit</th>
-                  <th className="px-4 py-3 text-center text-sm font-semibold">Rusak</th>
+                  <th className="px-4 py-3 text-center text-sm font-semibold">Tahun Pengadaan</th>
                   <th className="px-4 py-3 text-center text-sm font-semibold">Status</th>
                   <th className="px-4 py-3 text-center text-sm font-semibold">Aksi</th>
                 </tr>
@@ -679,7 +621,7 @@ const MasterDataPage = () => {
                 onClick={() => handleAdd('category')}
                 className="flex items-center gap-2 bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 text-sm"
               >
-                <Plus size={16} /> Tambah Kategori
+                <Plus size={16} /> Tambah Kategoriii
               </button>
             </div>
             <table className="w-full">
@@ -762,11 +704,7 @@ const MasterDataPage = () => {
           );
         })}
       </div>
-
-      {/* Content */}
       {renderContent()}
-
-      {/* Modal */}
       {renderModal()}
     </div>
   );

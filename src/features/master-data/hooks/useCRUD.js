@@ -1,13 +1,15 @@
 import { useState } from 'react';
+import Swal from 'sweetalert2';
 
 /**
  * Custom hook for CRUD operations on master data
  * @param {Object} service - Service object with CRUD methods
  * @param {String} entityType - Type of entity (buildings, floors, etc.)
  * @param {Function} onSuccess - Callback after successful operation
+ * @param {Function} enqueueSnackbar - Notistack function to show notifications
  * @returns {Object} { create, update, remove, loading }
  */
-export const useCRUD = (service, entityType, onSuccess) => {
+export const useCRUD = (service, entityType, onSuccess, enqueueSnackbar) => {
   const [loading, setLoading] = useState(false);
 
   const create = async (data) => {
@@ -81,9 +83,18 @@ export const useCRUD = (service, entityType, onSuccess) => {
   };
 
   const remove = async (id) => {
-    if (!window.confirm('Apakah Anda yakin ingin menghapus data ini?')) {
-      return;
-    }
+    const result = await Swal.fire({
+      title: 'Konfirmasi Hapus',
+      text: 'Apakah Anda yakin ingin menghapus data ini? Tindakan ini tidak dapat dibatalkan.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Ya, Hapus!',
+      cancelButtonText: 'Batal'
+    });
+
+    if (!result.isConfirmed) return;
 
     setLoading(true);
     try {
@@ -113,7 +124,9 @@ export const useCRUD = (service, entityType, onSuccess) => {
       return response;
     } catch (error) {
       console.error('Error deleting data:', error);
-      alert('Gagal menghapus data');
+      if (enqueueSnackbar) {
+        enqueueSnackbar('Gagal menghapus data', { variant: 'error' });
+      }
       throw error;
     } finally {
       setLoading(false);

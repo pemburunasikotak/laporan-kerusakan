@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useSnackbar } from 'notistack';
 import { MapPin, Building, Layers, Home, Tag, Box, FileText, Camera, Send, CheckCircle, X, AlertCircle } from 'lucide-react';
 
 // Dummy data (same as MasterDataPage for consistency)
@@ -70,6 +71,7 @@ const EQUIPMENT = [
 ];
 
 const PublicReportPage = () => {
+  const { enqueueSnackbar } = useSnackbar();
   // Form state
   const [formData, setFormData] = useState({
     description: '',
@@ -133,7 +135,7 @@ const PublicReportPage = () => {
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
     if (files.length + images.length > 5) {
-      alert('Maksimal 5 gambar yang dapat diupload');
+      enqueueSnackbar('Maksimal 5 gambar yang dapat diupload', { variant: 'warning' });
       return;
     }
 
